@@ -3,18 +3,18 @@
     "id": 1,
     "prefixo": "AA-AAA",
     "model_name": "Learjet 45",
-    "x": 154.7940836973933,
-    "y": 130.33955215836832,
-    "heading_deg": -39.300000000000004,
+    "x": 153,
+    "y": 129,
+    "heading_deg": 15,
     "hangar_name": "HANGAR_3"
   },
   {
     "id": 2,
     "prefixo": "AA-AAA",
     "model_name": "Learjet 45",
-    "x": 138.5,
-    "y": 135,
-    "heading_deg": 0,
+    "x": 117,
+    "y": 141,
+    "heading_deg": 30,
     "hangar_name": "HANGAR_3"
   }
 ]

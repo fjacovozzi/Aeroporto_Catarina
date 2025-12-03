@@ -687,6 +687,238 @@ import { OutlinePass } from '/node_modules/three/examples/jsm/postprocessing/Out
     return null;
   }
 
+    function worldToHangarLocal(h, worldPos) {
+    const rotDeg = h.rotation_deg || 0;
+    const rotRad = -rotDeg * Math.PI / 180;
+
+    const dx = worldPos.x - h.hangar_position.x;
+    const dy = worldPos.y - h.hangar_position.y;
+
+    const localX = dx * Math.cos(rotRad) - dy * Math.sin(rotRad);
+    const localY = dx * Math.sin(rotRad) + dy * Math.cos(rotRad);
+
+    return { x: localX, y: localY };
+  }
+
+  function hangarLocalToWorld(h, localPos) {
+    const rotDeg = h.rotation_deg || 0;
+    const rotRad = rotDeg * Math.PI / 180;
+
+    const lx = localPos.x;
+    const ly = localPos.y;
+
+    const wx = h.hangar_position.x + (lx * Math.cos(rotRad) - ly * Math.sin(rotRad));
+    const wy = h.hangar_position.y + (lx * Math.sin(rotRad) + ly * Math.cos(rotRad));
+
+    return { x: wx, y: wy };
+  }
+
+
+    // =======================
+  // 10.y Layout solver (caso 1: uma aeronave) 
+  // =======================
+
+  const LAYOUT_MAX_TIME_MS = 3000;       // limite de tempo por busca
+  const LAYOUT_MAX_NODES   = 50000;      // limite de tentativas de pose
+  const LAYOUT_GRID_STEP   = 1.0;        // 1 metro
+
+  async function findAutomaticPlacementForSingleAircraft(aircraft) {
+    if (!aircraft) return null;
+
+    // Descobre em qual hangar essa aeronave está atualmente
+    const pos = aircraft.root.position;
+    const hangarName = worldToHangarName(pos);
+    if (!hangarName) {
+      setPanelMessage(
+        `A aeronave ${aircraft.prefixo} não está dentro de nenhum hangar. ` +
+        `Solver automático (1 aeronave) só funciona dentro de hangar.`
+      );
+      return null;
+    }
+
+    const hangar = hangares.find(h => h.hangar_name === hangarName);
+    if (!hangar) {
+      setPanelMessage(`Hangar "${hangarName}" não encontrado na lista de hangares.`);
+      return null;
+    }
+
+    // Outras aeronaves desse hangar consideradas fixas
+    const others = [];
+    for (const other of aircraftMap.values()) {
+      if (other.id === aircraft.id) continue;
+      const otherHangarName = worldToHangarName(other.root.position);
+      if (otherHangarName === hangarName) {
+        others.push(other);
+      }
+    }
+
+    // Precisamos do box da fuselagem para calcular o half_size
+    const fuselageHb = aircraft.hitboxes && aircraft.hitboxes.fuselage;
+    if (!fuselageHb || !fuselageHb.size) {
+      setPanelMessage(
+        `Aeronave ${aircraft.prefixo} não possui hitbox de fuselagem válido ` +
+        `(não foi possível calcular half_size).`
+      );
+      return null;
+    }
+
+    const fusSize = fuselageHb.size;
+    const fusHalf = Math.max(fusSize.x, fusSize.y) / 2; // maior dimensão / 2
+
+    const halfWidth = hangar.size.width / 2;
+    const halfDepth = hangar.size.depth / 2;
+
+    // Porta: vamos considerar a direção da porta como rotation_deg do hangar
+    const doorHeadingDeg = hangar.rotation_deg || 0;
+    const headingOffsets = [-30, -15, 0, 15, 30];
+
+    // Pose atual da aeronave (para ordenar candidatos pela proximidade)
+    const currentPose = {
+      x: pos.x,
+      y: pos.y,
+      z: pos.z,
+      headingDeg: aircraft.heading_deg || 0,
+    };
+
+    // Gera lista de pontos de grid em coordenadas locais do hangar
+    function generateGridPoints() {
+      const pts = [];
+      for (let lx = -halfWidth; lx <= halfWidth; lx += LAYOUT_GRID_STEP) {
+        for (let ly = -halfDepth; ly <= halfDepth; ly += LAYOUT_GRID_STEP) {
+          // margem em relação às paredes com base em half_size da fuselagem
+          if (Math.abs(lx) > (halfWidth - fusHalf)) continue;
+          if (Math.abs(ly) > (halfDepth - fusHalf)) continue;
+          pts.push({ x: lx, y: ly });
+        }
+      }
+      return pts;
+    }
+
+    const gridLocal = generateGridPoints();
+    if (!gridLocal.length) {
+      setPanelMessage('Não há pontos válidos no grid para este hangar com o tamanho da fuselagem atual.');
+      return null;
+    }
+
+    // Ordena o grid pela proximidade do ponto atual da aeronave
+    const currentLocal = worldToHangarLocal(hangar, pos);
+    gridLocal.sort((a, b) => {
+      const da = (a.x - currentLocal.x) ** 2 + (a.y - currentLocal.y) ** 2;
+      const db = (b.x - currentLocal.x) ** 2 + (b.y - currentLocal.y) ** 2;
+      return da - db;
+    });
+
+    const startTime = performance.now();
+    let nodesTried = 0;
+
+    // Clearance inicial (grande) → até clearance configurado
+    const clearanceMin = clearance; // valor vindo de /api/settings
+    const clearanceStart = Math.max(clearanceMin, 10);
+
+    setPanelMessage(
+      `Buscando posição automática para ${aircraft.prefixo} ` +
+      `dentro do hangar ${hangarName} (clearance ${clearanceStart}→${clearanceMin})...`
+    );
+
+    for (let c = clearanceStart; c >= clearanceMin; c -= 1.0) {
+      const clearanceTest = c;
+
+      for (const localPt of gridLocal) {
+        const worldPt = hangarLocalToWorld(hangar, localPt);
+
+        for (const offset of headingOffsets) {
+          const headingDeg = doorHeadingDeg + offset;
+
+          const poseCandidate = {
+            x: worldPt.x,
+            y: worldPt.y,
+            z: 0,
+            headingDeg,
+          };
+
+          nodesTried++;
+          const elapsed = performance.now() - startTime;
+          if (elapsed > LAYOUT_MAX_TIME_MS || nodesTried > LAYOUT_MAX_NODES) {
+            console.warn(
+              '[LAYOUT SOLVER] abortado por limite (tempo ou nós)',
+              { elapsed, nodesTried }
+            );
+            setPanelMessage(
+              'Solver automático interrompido por limite de tempo / complexidade. ' +
+              'Tente com menos aeronaves ou um hangar maior.'
+            );
+            return null;
+          }
+
+          // Se não tem colisão com outras aeronaves nesse clearance, achamos uma posição
+          const collides = hasCollisionWithOthersAtPose(
+            aircraft,
+            poseCandidate,
+            others,
+            clearanceTest
+          );
+          if (!collides) {
+            // Encontramos uma pose viável
+            return {
+              pose: poseCandidate,
+              clearanceUsed: clearanceTest,
+              hangarName,
+            };
+          }
+        }
+      }
+    }
+
+    setPanelMessage(
+      `Não foi encontrada posição automática para ${aircraft.prefixo} ` +
+      `no hangar ${hangarName} com o clearance mínimo atual.`
+    );
+    return null;
+  }
+
+  async function applyAutomaticPlacementForSingleAircraft(aircraft) {
+    const result = await findAutomaticPlacementForSingleAircraft(aircraft);
+    if (!result || !result.pose) {
+      return;
+    }
+
+    const { pose, hangarName, clearanceUsed } = result;
+
+    // Aplica no objeto 3D
+    aircraft.root.position.set(pose.x, pose.y, 0);
+    aircraft.heading_deg = pose.headingDeg || 0;
+    const rad = aircraft.heading_deg * Math.PI / 180;
+    aircraft.root.rotation.set(0, 0, rad);
+
+    // Atualiza o placement correspondente
+    const placement = findPlacementById(aircraft.id);
+    if (placement) {
+      placement.x = pose.x;
+      placement.y = pose.y;
+      placement.heading_deg = aircraft.heading_deg;
+      placement.hangar_name = hangarName;
+
+      await apiUpdatePlacementCurrent(placement);
+    }
+
+    // Feedback visual e de texto
+    const collRes = checkCollisionsForAircraft(aircraft);
+    applyCollisionVisualFeedback(aircraft, collRes);
+
+    if (!collRes.hasCollision) {
+      setPanelMessage(
+        `Posição automática encontrada para ${aircraft.prefixo} ` +
+        `(hangar ${hangarName}, clearance usado: ${clearanceUsed.toFixed(1)} m).`
+      );
+    } else {
+      // Em teoria não deveria acontecer, mas se acontecer…
+      setPanelMessage(
+        `Posição automática aplicada em ${aircraft.prefixo}, ` +
+        `mas ainda há colisão detectada. Ajuste manualmente.`
+      );
+    }
+  }
+
   async function spawnAircraftFromPlacement(p) {
     const { id, prefixo, model_name, x, y, heading_deg } = p;
 
@@ -916,6 +1148,117 @@ import { OutlinePass } from '/node_modules/three/examples/jsm/postprocessing/Out
     return result;
   }
 
+    // =======================
+  // 10.x Helpers de OBB para poses arbitrárias (solver)
+  // =======================
+
+  // Constrói OBB 2D/3D para uma parte, dado apenas a pose (x, y, z, headingDeg) e o hitbox base
+  function buildObb2DFromHitboxPose(hitbox, pose, clearanceOverride = null) {
+    if (!hitbox || !hitbox.size || !hitbox.centerLocal) return null;
+
+    const size = hitbox.size;
+    const centerLocal = hitbox.centerLocal;
+    const localYawRad = hitbox.localYawRad || 0;
+
+    const clearanceValue =
+      typeof clearanceOverride === 'number' ? clearanceOverride : clearance;
+
+    const headingDeg = pose.headingDeg || 0;
+    const headingRad = headingDeg * Math.PI / 180;
+
+    const cosRoot = Math.cos(headingRad);
+    const sinRoot = Math.sin(headingRad);
+
+    // Centro do root (mundo)
+    const worldX = pose.x || 0;
+    const worldY = pose.y || 0;
+    const worldZ = pose.z || 0;
+
+    // Centro da parte em coordenadas de mundo
+    const centerWorldX = worldX + (centerLocal.x * cosRoot - centerLocal.y * sinRoot);
+    const centerWorldY = worldY + (centerLocal.x * sinRoot + centerLocal.y * cosRoot);
+    const centerWorldZ = worldZ + centerLocal.z;
+
+    // Half-extents com clearance aplicado
+    const halfX = size.x / 2 + clearanceValue;
+    const halfY = size.y / 2 + clearanceValue;
+    const halfZ = size.z / 2 + clearanceValue;
+
+    // Orientação final = heading da aeronave + yaw local da parte
+    const totalYaw = headingRad + localYawRad;
+    const cosTot = Math.cos(totalYaw);
+    const sinTot = Math.sin(totalYaw);
+
+    const axisU = new THREE.Vector2(cosTot, sinTot);
+    const axisV = new THREE.Vector2(-sinTot, cosTot);
+
+    const center = new THREE.Vector2(centerWorldX, centerWorldY);
+
+    return {
+      center,
+      axisU,
+      axisV,
+      halfX,
+      halfY,
+      centerZ: centerWorldZ,
+      halfZ,
+    };
+  }
+
+  const PART_KEYS = ['fuselage', 'leftwing', 'rightwing', 'winglet', 'tail'];
+
+  function buildAllObbsForAircraftPose(aircraftInfo, pose, clearanceOverride = null) {
+    const out = {};
+    if (!aircraftInfo || !aircraftInfo.hitboxes) return out;
+
+    for (const key of PART_KEYS) {
+      const hb = aircraftInfo.hitboxes[key];
+      if (!hb || !hb.size || !hb.centerLocal) continue;
+      const obb = buildObb2DFromHitboxPose(hb, pose, clearanceOverride);
+      if (obb) out[key] = obb;
+    }
+    return out;
+  }
+
+  function anyCollisionBetweenTwoPoses(acA, poseA, acB, poseB, clearanceOverride = null) {
+    if (!acA || !acB) return false;
+
+    const obbsA = buildAllObbsForAircraftPose(acA, poseA, clearanceOverride);
+    const obbsB = buildAllObbsForAircraftPose(acB, poseB, clearanceOverride);
+
+    for (const keyA of PART_KEYS) {
+      const obbA = obbsA[keyA];
+      if (!obbA) continue;
+
+      for (const keyB of PART_KEYS) {
+        const obbB = obbsB[keyB];
+        if (!obbB) continue;
+
+        if (obb3DIntersects(obbA, obbB)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // Checa colisão de uma aeronave candidata com uma lista de aeronaves "fixas"
+  function hasCollisionWithOthersAtPose(candidateAc, poseCandidate, others, clearanceOverride = null) {
+    for (const other of others) {
+      const otherPose = {
+        x: other.root.position.x,
+        y: other.root.position.y,
+        z: other.root.position.z,
+        headingDeg: other.heading_deg || 0,
+      };
+      if (anyCollisionBetweenTwoPoses(candidateAc, poseCandidate, other, otherPose, clearanceOverride)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+
   function applyCollisionVisualFeedback(aircraft, collisionResult) {
     if (!aircraft) return;
     if (!collisionResult.hasCollision) {
@@ -1017,7 +1360,7 @@ import { OutlinePass } from '/node_modules/three/examples/jsm/postprocessing/Out
     }
   }
 
-  function onPointerUp() {
+    function onPointerUp() {
     if (!selectedAircraft) return;
 
     const wasDragging = isDragging || isRotating;
@@ -1050,7 +1393,26 @@ import { OutlinePass } from '/node_modules/three/examples/jsm/postprocessing/Out
 
     const collRes = checkCollisionsForAircraft(selectedAircraft);
     applyCollisionVisualFeedback(selectedAircraft, collRes);
+
+    // NOVO: se ainda há colisão, oferecer solver automático para ESTA aeronave
+    if (collRes.hasCollision) {
+      const wantsAuto = window.confirm(
+        `Foi detectada colisão para a aeronave ${selectedAircraft.prefixo}.\n\n` +
+        `Deseja que o sistema tente encontrar automaticamente uma posição dentro do hangar ` +
+        `para esta aeronave, respeitando o clearance atual e o tamanho da fuselagem?`
+      );
+
+      if (wantsAuto) {
+        // Rodar solver para esta aeronave específica (Situação 1)
+        applyAutomaticPlacementForSingleAircraft(selectedAircraft)
+          .catch(err => {
+            console.error('[LAYOUT SOLVER] erro ao aplicar solução automática:', err);
+            setPanelMessage('Erro ao aplicar solução automática. Veja o console.');
+          });
+      }
+    }
   }
+
 
   renderer.domElement.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointermove', onPointerMove);
