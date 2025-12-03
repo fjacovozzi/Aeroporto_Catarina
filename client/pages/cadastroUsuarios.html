@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Usuários - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Cadastro de Usuários
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Gerencie contas de acesso ao sistema.
+        </p>
+      </div>
+
+      <form id="user-form">
+        <input type="hidden" id="user-id" />
+
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" required />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Perfil</label>
+          <select id="role">
+            <option value="admin">admin</option>
+            <option value="user">user</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="active" checked />
+            Ativo
+          </label>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="secondary" id="btn-novo">Novo</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="form-message" class="info-message"></div>
+      </form>
+
+      <hr style="margin: 20px 0; border-color: #2a2f38;" />
+
+      <h2 style="font-size: 1rem; margin-bottom: 8px;">Usuários cadastrados</h2>
+      <table id="users-table" style="width:100%; font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuário</th>
+            <th>Perfil</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-menu" class="secondary">Voltar ao Menu</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/cadastroUsuarios.js"></script>
+</body>
+</html>

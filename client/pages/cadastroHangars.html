@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Hangares - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Cadastro de Hangares
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Defina posição, dimensões e abertura de porta dos hangares.
+        </p>
+      </div>
+
+      <form id="hangar-form">
+        <input type="hidden" id="hangar-id" />
+
+        <div class="form-group">
+          <label for="hangar_name">Nome do Hangar</label>
+          <input type="text" id="hangar_name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Posição (centro) X / Y</label>
+          <input type="number" id="pos_x" step="0.1" placeholder="x" />
+          <input type="number" id="pos_y" step="0.1" placeholder="y" />
+        </div>
+
+        <div class="form-group">
+          <label>Dimensões (width / depth / height)</label>
+          <input type="number" id="size_width" step="0.1" placeholder="width" />
+          <input type="number" id="size_depth" step="0.1" placeholder="depth" />
+          <input type="number" id="size_height" step="0.1" placeholder="height" />
+        </div>
+
+        <div class="form-group">
+          <label for="rotation_deg">Rotação (graus)</label>
+          <input type="number" id="rotation_deg" step="1" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Parede da porta / largura / altura / bottom_z</label>
+          <select id="door_wall">
+            <option value="front">front</option>
+            <option value="back">back</option>
+            <option value="left">left</option>
+            <option value="right">right</option>
+          </select>
+          <input type="number" id="door_width" step="0.1" placeholder="width" />
+          <input type="number" id="door_height" step="0.1" placeholder="height" />
+          <input type="number" id="door_bottom_z" step="0.1" placeholder="bottom_z" />
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="secondary" id="btn-novo">Novo</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="form-message" class="info-message"></div>
+      </form>
+
+      <hr style="margin: 20px 0; border-color: #2a2f38;" />
+
+      <h2 style="font-size: 1rem; margin-bottom: 8px;">Hangares cadastrados</h2>
+      <table id="hangars-table" style="width:100%; font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Posição</th>
+            <th>Tamanho</th>
+            <th>Porta</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-menu" class="secondary">Voltar ao Menu</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/cadastroHangars.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!-- client/pages/mainMenu.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Menu Principal - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Menu Principal
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Escolha uma opção para gerenciar cadastros, layouts salvos<br />
+          ou acessar a interface 3D de visualização.
+        </p>
+      </div>
+
+      <ul class="menu-list">
+        <li>
+          <button class="primary menu-button" id="btn-3d">
+            Interface 3D (Viewer de Layout)
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-prefixos">
+            Cadastro de Prefixos
+            <span class="code">prefixos.json</span>
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-modelos">
+            Cadastro de Modelos
+            <span class="code">modelos.json</span>
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-hangars">
+            Cadastro de Hangares
+            <span class="code">hangars.json</span>
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-users">
+            Cadastro de Usuários
+            <span class="code">users.json</span>
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-paths">
+            Cadastro de Paths (Caminhos)
+            <span class="code">paths.json</span>
+          </button>
+        </li>
+        <li>
+          <button class="secondary menu-button" id="btn-placements-saved">
+            Visualizar / Editar placements_saved
+            <span class="code">placements_saved.json</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+
+      <div id="menu-message" class="info-message"></div>
+    </div>
+  </div>
+
+  <script src="../js/mainMenu.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Prefixos - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Cadastro de Prefixos
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Configure prefixos de aeronaves e vincule aos modelos.
+        </p>
+      </div>
+
+      <form id="prefixo-form">
+        <input type="hidden" id="prefixo-id" />
+
+        <div class="form-group">
+          <label for="prefixo">Prefixo</label>
+          <input type="text" id="prefixo" required />
+        </div>
+
+        <div class="form-group">
+          <label for="model_name">Modelo</label>
+          <select id="model_name" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="eta">ETA (texto livre)</label>
+          <input type="text" id="eta" />
+        </div>
+
+        <div class="form-group">
+          <label for="etd">ETD (texto livre)</label>
+          <input type="text" id="etd" />
+        </div>
+
+        <div class="form-group">
+          <label for="hangarPreferencial">Hangar Preferencial</label>
+          <select id="hangarPreferencial">
+            <option value="">(nenhum)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="hangarObrigatorio" />
+            Hangar obrigatório
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="podeAoTempo" />
+            Pode ficar ao tempo
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="prioridade">Prioridade</label>
+          <select id="prioridade">
+            <option value="normal">normal</option>
+            <option value="alta">alta</option>
+            <option value="baixa">baixa</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="servicos">Serviços (texto livre)</label>
+          <input type="text" id="servicos" placeholder="ex: limpeza, manutenção" />
+        </div>
+
+        <div class="form-group">
+          <label for="observacoes">Observações</label>
+          <input type="text" id="observacoes" />
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="secondary" id="btn-novo">Novo</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="form-message" class="info-message"></div>
+      </form>
+
+      <hr style="margin: 20px 0; border-color: #2a2f38;" />
+
+      <h2 style="font-size: 1rem; margin-bottom: 8px;">Prefixos cadastrados</h2>
+      <table id="prefixos-table" style="width:100%; font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Prefixo</th>
+            <th>Modelo</th>
+            <th>Hangar Pref.</th>
+            <th>Prioridade</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-menu" class="secondary">Voltar ao Menu</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/cadastroPrefixos.js"></script>
+</body>
+</html>

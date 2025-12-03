@@ -1,0 +1,49 @@
+<!-- client/pages/login.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Login
+          <span class="tag-pill">admin / admin</span>
+        </h1>
+        <p class="card-subtitle">
+          Acesse o painel para gerenciar cadastros e a interface 3D.
+        </p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" name="username" autocomplete="username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+
+        <div class="actions-row">
+          <button type="submit" class="primary">Entrar</button>
+        </div>
+
+        <div id="login-error" class="error-message" style="display:none;"></div>
+      </form>
+
+      <p class="info-message">
+        Este sistema funciona na mesma rede do servidor.<br />
+        Certifique-se de estar acessando a URL correta (ex: <code>http://localhost:3000</code>).
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/login.js"></script>
+</body>
+</html>

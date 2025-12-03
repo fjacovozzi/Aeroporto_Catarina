@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Modelos - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          Cadastro de Modelos
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Gerencie os modelos de aeronaves e o caminho dos arquivos GLB.
+        </p>
+      </div>
+
+      <form id="modelo-form">
+        <input type="hidden" id="modelo-id" />
+        <div class="form-group">
+          <label for="model_name">Nome do Modelo</label>
+          <input type="text" id="model_name" required />
+        </div>
+        <div class="form-group">
+          <label for="glb_path">Caminho GLB</label>
+          <input type="text" id="glb_path" placeholder="/assets/aircrafts/Modelo.glb" required />
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="secondary" id="btn-novo">Novo</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+        <div id="form-message" class="info-message"></div>
+      </form>
+
+      <hr style="margin: 20px 0; border-color: #2a2f38;" />
+
+      <h2 style="font-size: 1rem; margin-bottom: 8px;">Modelos cadastrados</h2>
+      <table id="modelos-table" style="width:100%; font-size:0.9rem;">
+        <thead>
+          <tr>
+            <th style="text-align:left;">ID</th>
+            <th style="text-align:left;">Modelo</th>
+            <th style="text-align:left;">GLB Path</th>
+            <th style="text-align:left;">Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-menu" class="secondary">Voltar ao Menu</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/cadastroModelos.js"></script>
+</body>
+</html>

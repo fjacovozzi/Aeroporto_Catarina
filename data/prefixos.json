@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "prefixo": "AA-AAA",
+    "model_name": "Learjet 45",
+    "eta": null,
+    "etd": null,
+    "hangarPreferencial": null,
+    "hangarObrigatorio": false,
+    "podeAoTempo": false,
+    "servicos": [],
+    "prioridade": "normal",
+    "observacoes": ""
+  }
+]

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>placements_saved - Aero Layout</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">
+          placements_saved.json
+          <span id="user-pill" class="tag-pill"></span>
+        </h1>
+        <p class="card-subtitle">
+          Visualize, crie, edite e exclua registros de posições salvas oficialmente.
+        </p>
+      </div>
+
+      <form id="placement-form">
+        <input type="hidden" id="placement-id" />
+
+        <div class="form-group">
+          <label for="prefixo">Prefixo</label>
+          <input type="text" id="prefixo" required />
+        </div>
+
+        <div class="form-group">
+          <label for="model_name">Modelo (texto livre)</label>
+          <input type="text" id="model_name" placeholder="ex: Embraer_Phenom_300" required />
+        </div>
+
+        <div class="form-group">
+          <label>Posição X / Y</label>
+          <input type="number" id="x" step="0.1" placeholder="x" />
+          <input type="number" id="y" step="0.1" placeholder="y" />
+        </div>
+
+        <div class="form-group">
+          <label for="heading_deg">Heading (graus)</label>
+          <input type="number" id="heading_deg" step="1" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="hangar_name">Hangar (texto livre)</label>
+          <input type="text" id="hangar_name" placeholder="ex: Hangar A" />
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="secondary" id="btn-novo">Novo</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="form-message" class="info-message"></div>
+      </form>
+
+      <hr style="margin: 20px 0; border-color: #2a2f38;" />
+
+      <h2 style="font-size: 1rem; margin-bottom: 8px;">Registros em placements_saved</h2>
+      <table id="placements-table" style="width:100%; font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Prefixo</th>
+            <th>Modelo</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>Heading</th>
+            <th>Hangar</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions-row">
+        <button id="btn-refresh" class="secondary">Refresh (Reset lógico)</button>
+        <button id="btn-menu" class="secondary">Voltar ao Menu</button>
+        <button id="btn-logout" class="danger">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/placementsSavedView.js"></script>
+</body>
+</html>

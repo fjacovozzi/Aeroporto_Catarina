@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "hangar_name": "HANGAR_3",
+    "hangar_position": {
+      "x": 138.5,
+      "y": 135
+    },
+    "size": {
+      "width": 75,
+      "depth": 40,
+      "height": 20
+    },
+    "rotation_deg": 0,
+    "door": {
+      "wall": "front",
+      "width": 35,
+      "height": 12,
+      "bottom_z": 0
+    }
+  }
+]

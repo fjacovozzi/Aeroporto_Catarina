@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Interface 3D - Aero Layout</title>
+    <link rel="stylesheet" href="../styles/global.css" />
+
+    <!-- Import map para resolver "three" dentro dos modules da pasta examples/jsm -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "/node_modules/three/build/three.module.js"
+      }
+    }
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0f1216;
+        color: #f5f6f9;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      /* Canvas 3D em tela cheia */
+      #three-container {
+        position: fixed;
+        inset: 0;
+      }
+
+      /* Painel flutuante à direita */
+      #overlay-panel {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 380px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        z-index: 10;
+      }
+
+      #overlay-panel .card {
+        background: rgba(15, 18, 22, 0.96);
+        border-radius: 16px;
+        border: 1px solid #2a2f38;
+        padding: 14px 14px 10px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      #overlay-panel h2 {
+        margin: 0 0 8px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f5f6f9;
+      }
+
+      #overlay-panel h3 {
+        margin: 0 0 6px 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #e0e4ee;
+      }
+
+      #overlay-panel label {
+        display: block;
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+        color: #9ba0ac;
+      }
+
+      #overlay-panel input,
+      #overlay-panel select {
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 6px;
+        border-radius: 8px;
+        border: 1px solid #343944;
+        background: #151920;
+        color: #f5f6f9;
+        font-size: 0.8rem;
+      }
+
+      #overlay-panel input[readonly] {
+        opacity: 0.7;
+      }
+
+      #overlay-panel button {
+        padding: 1px 50px;
+        border-radius: 999px;
+        border: 1px solid #3c82f6;
+        background: #2563eb;
+        color: #f5f6f9;
+        font-size: 0.8rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      #overlay-panel button.secondary {
+        background: transparent;
+        border-color: #3a3f4a;
+      }
+
+      #overlay-panel button.danger {
+        background: #b91c1c;
+        border-color: #dc2626;
+      }
+
+      #overlay-panel .row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      #overlay-panel .row > * {
+        flex: 1;
+        min-width: 0;
+      }
+
+      #overlay-panel .row.buttons > * {
+        flex: 0;
+      }
+
+      #user-pill {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(15, 18, 22, 0.9);
+        border: 1px solid #2a2f38;
+        color: #9ba0ac;
+        white-space: nowrap;
+      }
+
+      #panel-message {
+        font-size: 0.78rem;
+        color: #e0e4ee;
+        min-height: 1.2em;
+      }
+
+      /* Barra de status embaixo à esquerda */
+      #status-bar {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(15, 18, 22, 0.92);
+        border: 1px solid #2a2f38;
+        font-size: 0.8rem;
+        color: #9ba0ac;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Canvas 3D -->
+    <div id="three-container"></div>
+
+    <!-- Painel flutuante / Tabela da direita -->
+    <div id="overlay-panel">
+      <!-- Card topo: título + usuário + botões globais -->
+      <div class="card">
+        <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h2 style="margin: 0; flex: 0 0 auto;">Interface 3D – Layout</h2>
+          <span id="user-pill">carregando...</span>
+        </div>
+
+        <div class="row buttons" style="gap: 6px; margin-top: 4px;">
+          <button id="btn-menu" class="secondary">Menu</button>
+          <button id="btn-refresh" class="secondary">Refresh</button>
+          <button id="btn-logout" class="danger">Logout</button>
+        </div>
+      </div>
+
+      <!-- Card: Clearance global -->
+      <div class="card">
+        <h3>Clearance global (m)</h3>
+        <div class="row">
+          <input id="clearance-input" type="number" step="0.1" min="0" value="1.0" />
+          <button id="btn-clearance">Atualizar</button>
+        </div>
+        <p style="margin: 0; font-size: 0.7rem; color: #9ba0ac;">
+          Usado em todos os cálculos de colisão entre asas, fuselagem e paredes de hangar.
+        </p>
+      </div>
+
+      <!-- Card: Adição manual de aeronave -->
+      <div class="card">
+        <h3>Adicionar aeronave na cena</h3>
+
+        <label for="prefixo-select">Prefixo</label>
+        <select id="prefixo-select">
+          <!-- preenchido via JS com prefixos.json -->
+        </select>
+
+        <label for="modelo-display">Modelo</label>
+        <input id="modelo-display" type="text" readonly />
+
+        <label for="hangar-add-select">Hangar (opcional)</label>
+        <select id="hangar-add-select">
+          <option value="">(Sem hangar – posição padrão 150; -150)</option>
+          <!-- preenchido via JS com hangars.json -->
+        </select>
+
+        <div class="row buttons" style="margin-top: 4px;">
+          <button id="btn-add-aircraft">Adicionar aeronave</button>
+        </div>
+
+        <p style="margin: 4px 0 0 0; font-size: 0.7rem; color: #9ba0ac;">
+          Se um hangar for selecionado, a aeronave será posicionada no centro desse hangar.
+        </p>
+      </div>
+
+      <!-- Card: Salvar posições -->
+      <div class="card">
+        <h3>Salvar posições</h3>
+
+        <label for="save-scope">Escopo</label>
+        <select id="save-scope">
+          <option value="Todos">Todos os prefixos</option>
+          <option value="Hangar">Somente de um hangar</option>
+        </select>
+
+        <label for="save-hangar-select">Hangar (quando escopo = Hangar)</label>
+        <select id="save-hangar-select">
+          <option value="">(selecione)</option>
+          <!-- preenchido via JS -->
+        </select>
+
+        <div class="row buttons" style="margin-top: 6px;">
+          <button id="btn-save-positions">Salvar Posições</button>
+        </div>
+
+        <p style="margin: 4px 0 0 0; font-size: 0.7rem; color: #9ba0ac;">
+          Salva a partir do estado atual de <code>placements_current_view.json</code>
+          para <code>placements_saved.json</code>.
+        </p>
+      </div>
+
+      
+      <!-- Card: Mensagens / feedback -->
+      <div class="card">
+        <h3>Status da operação</h3>
+        <div id="panel-message"></div>
+      </div>
+    </div>
+
+    <!-- Barra de status inferior -->
+    <div id="status-bar">
+      Nenhuma aeronave selecionada. Clique em uma aeronave para selecionar.
+    </div>
+
+    <!-- Script principal da Interface 3D -->
+    <script type="module" src="../js/viewer3d.js?v=5"></script>
+  </body>
+</html>
